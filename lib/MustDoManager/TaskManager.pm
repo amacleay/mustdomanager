@@ -10,7 +10,7 @@ use File::Spec;
 use POSIX qw(
   strftime
 );
-use List::Util qw(
+use List::AllUtils qw(
   max
 );
 

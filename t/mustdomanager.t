@@ -6,7 +6,7 @@ use constant CONFIG_FILE => '/tmp/mustdomanager_t.yml';
 use Test::More;
 use Test::Exception;
 
-use List::Util qw(
+use List::AllUtils qw(
 any
 all
 none
