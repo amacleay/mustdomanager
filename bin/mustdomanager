@@ -8,3 +8,21 @@ print MustDoManager::Client::process_cli_command(@ARGV);
 
 exit;
 
+__END__
+
+=head1 NAME
+
+mustdomanager - provides a simple text-based daily
+task manager.
+
+=head1 SYNOPSIS
+
+ > mustdomanager add walk the dog
+ >>> Added task 1
+ > mustdomanager list
+ >>> #1. walk the dog
+ > mustdomanager complete 1
+ >>> Completed task #1
+
+=cut
+

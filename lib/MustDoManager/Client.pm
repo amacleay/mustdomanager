@@ -151,3 +151,23 @@ sub response_interpretation {
 
 1;
 
+__END__
+
+=head1 NAME
+
+MustDoManager::Client - client for a tiny
+application to manage a daily to-do list
+
+=head1 SYNOPSIS
+
+ > mustdomanager add walk the dog
+ >>> Added task 1
+ > mustdomanager list
+ >>> #1 walk the dog
+
+=head1 DESCRIPTION
+
+The purpose of this module is to provide a simple text-based
+interface to a L<MustDoManager::TaskManager> object.
+
+=cut
