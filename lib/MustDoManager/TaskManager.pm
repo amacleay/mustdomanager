@@ -20,7 +20,7 @@ has config_file => (
     (my $package_string = __PACKAGE__) =~ s/::/_/g ;
     return File::Spec->catfile(
       $ENV{HOME},
-      "$package_string.yml",
+      lc(".$package_string.yml"),
     );
   },
 );

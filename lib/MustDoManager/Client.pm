@@ -116,7 +116,14 @@ sub response_from_command {
     return;
   }
   else {
-    return $task_manager->$manager_method( @manager_args );
+    my @response = $task_manager->$manager_method( @manager_args );
+
+    # Always save the state after the manager does something.
+    # This is sort of a hack, but prevents having to be
+    # concerned with a task getting lost.
+    $task_manager->save_current_state;
+
+    return @response;
   }
 }
 
