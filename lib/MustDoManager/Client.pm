@@ -82,7 +82,7 @@ Readonly::Hash my %response_dispatch => {
   help => sub {
     return <<EOH
 MustDoManager.
-Give me acommand like 'add [description]', 'complete [number]', or 'list'
+Give me a command like 'add [description]', 'complete [number]', or 'list'
 EOH
   },
 };
@@ -96,8 +96,8 @@ sub process_cli_command {
 }
 
 sub process_command {
-  my $command = shift;
-  my $task_manager = MustDoManager::TaskManager->new;
+  my ($command, $task_manager) = @_;
+  $task_manager ||= MustDoManager::TaskManager->new;
 
   my ( $manager_method, @manager_args )
     = task_manager_action($command);
