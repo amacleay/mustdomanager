@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use MustDoManager::Client;
+
+print MustDoManager::Client::process_cli_command(@ARGV);
+
+exit;
+
