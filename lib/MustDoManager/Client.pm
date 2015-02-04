@@ -3,71 +3,79 @@ package MustDoManager::Client;
 use strict;
 use warnings;
 
+use Carp;
+use English qw( -no_match_vars );
+use File::Which qw( which );
+use IPC::Run3 qw( run3 );
 use MustDoManager::TaskManager;
 use Readonly;
-use Scalar::Util qw(
-looks_like_number
-);
+use Scalar::Util qw( looks_like_number );
 
 Readonly::Hash my %action_dispatch => {
   add => sub {
-    my ($description) = @_;
+    my ($description, @rest) = @_;
 
-    if ($description =~ /^\s*$/) {
+    if (
+      !$description
+      || $description =~ /^\s*$/
+    ) {
       # no description, don't do it
       return;
     }
     else {
-      return 'add_task', { description => $description };
+      return 'add_task', { description => $description }, @rest;
     }
   },
   complete => sub {
-    my ($maybe_ordinal) = @_;
+    my ($maybe_ordinal, @rest) = @_;
     if (looks_like_number $maybe_ordinal) {
-      return 'complete_task', $maybe_ordinal;
+      return 'complete_task', $maybe_ordinal, @rest;
     }
     else {
       return;
     }
   },
+  remove => sub {
+    my ($maybe_ordinal, @rest) = @_;
+    if (looks_like_number $maybe_ordinal) {
+      return 'remove_task', $maybe_ordinal, @rest;
+    }
+    else {
+      return;
+    }
+  },
+  list => sub {
+    my (@rest) = @_;
+    return 'task_list', @rest;
+  },
   default => sub {
     return 'help';
   },
-  list => sub {
-    return 'task_list';
-  },
 };
 Readonly::Hash my %response_dispatch => {
-  add_task => sub {
-    my ($maybe_ordinal) = @_;
+  # The responses for add, complete, remove are basically identical
+  (map {
+    my $action = $_;
+    (
+      "${action}_task" => sub {
+          my ($maybe_ordinal) = @_;
 
-    if (looks_like_number $maybe_ordinal) {
-      if ($maybe_ordinal > 0) {
-        return sprintf "Added new task %d", $maybe_ordinal;
-      }
-      else {
-        return sprintf "Task add failed with code %d", $maybe_ordinal;
-      }
-    }
-    else {
-      return "Failed to parse output";
-    }
-  },
-  complete_task => sub {
-    my ($maybe_ordinal) = @_;
+          if (looks_like_number $maybe_ordinal) {
+            if ($maybe_ordinal > 0) {
+              return sprintf 'Task %s succeeded: task #%d', $action, $maybe_ordinal;
+            }
+            else {
+              return sprintf 'Task %s failed with code %d', $action, $maybe_ordinal;
+            }
+          }
+          else {
+            return "Failed to parse output";
+          }
+      },
+    );
+  } qw( add complete remove )),
 
-    if (looks_like_number $maybe_ordinal) {
-      if ($maybe_ordinal > 0) {
-        return sprintf "Completed task %d", $maybe_ordinal;
-      }
-      else {
-        return sprintf "Completion failed with code %d", $maybe_ordinal;
-      }
-    }
-    else {
-      return "Failed to parse output";
-    }
-  },
+  # The response for the rest are different
   task_list => sub {
     my ($task_list) = @_;
     my @task_lines = map {
@@ -131,10 +139,23 @@ sub task_manager_action {
   my $command = shift;
 
   my @method_and_args;
-  if ($command =~ /^\s*($action_keyword_regex)\b/g) {
-    my $command_keyword = $1;
-    ( my $subcommand = $command ) =~ s/^\s*$command_keyword\s*//;
-    @method_and_args = $action_dispatch{$command_keyword}->($subcommand);
+  if ($command =~ /^(.*?)($action_keyword_regex)\b(.*)\s*/g) {
+    my ($maybe_date, $command_keyword, $subcommand) = ($1, $2, $3);
+    foreach ($maybe_date, $subcommand) {
+      s/^\s*//;
+      s/\s*$//;
+    }
+
+    my @args_for_action;
+    if ($subcommand) {
+      push @args_for_action, $subcommand;
+    }
+    if ($maybe_date) {
+      my $date = translate_date($maybe_date);
+      push @args_for_action, $date;
+    }
+
+    @method_and_args = $action_dispatch{$command_keyword}->(@args_for_action);
   }
 
   if (@method_and_args) {
@@ -142,6 +163,35 @@ sub task_manager_action {
   }
   else {
     return $action_dispatch{default}->();
+  }
+}
+
+# For date parsing, we'll use GNU date,
+# which has an awesome feature where it can
+# parse "human readable" date strings
+our $GNU_DATE
+  = $OSNAME eq 'darwin' ? 'gdate'
+  : $OSNAME eq 'linux' ? 'date'
+  : undef;
+our $CAN_GNU_DATE
+  = which($GNU_DATE) ? 1
+  : 0;
+
+sub translate_date {
+  my $date_string = shift;
+  if ($CAN_GNU_DATE) {
+    run3(
+      [ $GNU_DATE, '-d', $date_string, '+%Y%m%d' ],
+      undef,
+      \(my $stdout),
+      \(my $stderr)
+    );
+    chomp $stdout;
+
+    return $stdout;
+  }
+  else {
+    confess "Unable to parse dates: GNU date not available";
   }
 }
 

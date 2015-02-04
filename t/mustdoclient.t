@@ -2,14 +2,14 @@ use strict;
 use warnings;
 
 use Test::More;
+use MustDoManager::TaskManager;
 
 require_ok('MustDoManager::Client');
 
 #####################################
 # task_manager_action
 
-my $command = 'add hang the laundry';
-
+my $date = MustDoManager::TaskManager::init_today();
 foreach (
   ['add hang the laundry',
     'add_task',
@@ -29,6 +29,34 @@ foreach (
   ['',
     'help'
   ],
+  ['remove 666',
+    'remove_task',
+    666,
+  ],
+  ['20010101 add walk the dog',
+    'add_task',
+    { description => 'walk the dog' },
+    '20010101',
+  ],
+  ['tomorrow add walk the dog',
+    'add_task',
+    { description => 'walk the dog' },
+    $date + 1,
+  ],
+  ['today complete 20',
+    'complete_task',
+    20,
+    $date,
+  ],
+  ['yesterday list',
+    'task_list',
+    $date - 1,
+  ],
+  ['January 20, 1944 remove 30',
+    'remove_task',
+    30,
+    '19440120',
+  ],
 ) {
   my ($command, $expect_method, @expect_args) = @$_;
   my ($manager_method, @manager_args) = MustDoManager::Client::task_manager_action($command);
@@ -44,6 +72,7 @@ foreach (
   );
 }
 
+my $expect_method = 'help';
 foreach my $undefined_command (
   'add',
   'addition and subtraction',
@@ -53,11 +82,10 @@ foreach my $undefined_command (
   'complete me',
 ) {
   my ($manager_method, @manager_action) = MustDoManager::Client::task_manager_action($undefined_command);
-  my $expect_method = 'help';
   is(
     $manager_method,
     $expect_method,
-    "Undefined command gets right method '$expect_method': '$command'",
+    "Undefined command gets right method '$expect_method': '$undefined_command'",
   );
 }
 

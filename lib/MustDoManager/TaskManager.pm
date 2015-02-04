@@ -4,15 +4,11 @@ use strict;
 use warnings;
 
 use Carp;
-use Moo;
-use YAML;
 use File::Spec;
-use POSIX qw(
-  strftime
-);
-use List::AllUtils qw(
-  max
-);
+use List::AllUtils qw( max );
+use Moo;
+use POSIX qw( strftime );
+use YAML;
 
 has config_file => (
   is => 'ro',
