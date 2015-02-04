@@ -160,5 +160,53 @@ TODO: {
   );
 }
 
+####################################
+# Test variable date behavior
+
+my $different_date = $manager->date - 15;
+my $bogus_date = '12';  # obviously not a date
+
+dies_ok { $manager->task_list( $bogus_date ) } "List dies with bogus date";
+
+is_deeply(
+  $manager->task_list( $different_date ),
+  [],
+  "Task list for an arbitrary new day is empty",
+);
+
+dies_ok { $manager->add_task({}, $bogus_date) } "Add dies with bogus date";
+is(
+  $manager->add_task(
+    { description => 'feed the hogs' },
+    $different_date,
+  ),
+  1,
+  "Task is first task for new day",
+);
+is(
+  $manager->task_list( $different_date )->[0]->{description},
+  'feed the hogs',
+  "Task description correct for new day",
+);
+ok(
+  ! $manager->task_list( $different_date )->[0]->{completed},
+  "Test precondition: brand new task not yet completed",
+);
+
+dies_ok { $manager->complete_task(1, $bogus_date) } "complete dies with bogus date";
+$manager->complete_task(1, $different_date);
+ok(
+  $manager->task_list( $different_date )->[0]->{completed},
+  "Able to complete task for different date",
+);
+
+dies_ok { $manager->remove_task(1, $bogus_date) } "remove dies with bogus date";
+$manager->remove_task(1, $different_date);
+is_deeply(
+  $manager->task_list( $different_date ),
+  [],
+  "Able to successfully clear task list for different date",
+);
+
 done_testing;
 

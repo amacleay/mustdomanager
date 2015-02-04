@@ -59,29 +59,37 @@ sub save_current_state {
 }
 
 sub add_task {
-  my ($self, $task) = @_;
+  my ($self, $task, $maybe_date) = @_;
   
-  my $highest_ordinal = max map { $_->{ordinal} } @{ $self->task_list };
+  my $highest_ordinal = max map {
+    $_->{ordinal}
+  } @{ $self->task_list($maybe_date) };
   $highest_ordinal ||= 0;
 
   $task->{ordinal} = $highest_ordinal + 1;
-  push @{ $self->task_list }, $task;
+  push @{ $self->task_list($maybe_date) }, $task;
 
   return $task->{ordinal};
 }
 
 
 sub task_list {
-  my ($self) = @_;
-  $self->full_task_list->{ $self->date } ||= [];
+  my ($self, $maybe_date) = @_;
 
-  return $self->full_task_list->{ $self->date };
+  my $date = $maybe_date || $self->date;
+
+  # Throw an error if date invalid
+  validate_date($date);
+
+  $self->full_task_list->{ $date } ||= [];
+
+  return $self->full_task_list->{ $date };
 }
 
 sub complete_task {
-  my ($self, $ordinal) = @_;
+  my ($self, $ordinal, $maybe_date) = @_;
 
-  foreach my $task (@{ $self->task_list }) {
+  foreach my $task (@{ $self->task_list($maybe_date) }) {
     if ($task->{ordinal} == $ordinal) {
       $task->{completed} = 1;
       return $ordinal;
@@ -92,9 +100,9 @@ sub complete_task {
 }
 
 sub remove_task {
-  my ($self, $ordinal) = @_;
+  my ($self, $ordinal, $maybe_date) = @_;
 
-  my $original_task_list = $self->task_list;
+  my $original_task_list = $self->task_list($maybe_date);
   my @final_task_list;
   foreach my $task (@$original_task_list) {
     if ($task->{ordinal} != $ordinal) {
