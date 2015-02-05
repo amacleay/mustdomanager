@@ -29,6 +29,13 @@ foreach (
   ['',
     'help'
   ],
+  ['date',
+    'date',
+  ],
+  ['today date',
+    'date',
+    $date,  # today's date
+  ],
   ['remove 666',
     'remove_task',
     666,
@@ -80,6 +87,7 @@ foreach my $undefined_command (
   'completely engrossed',
   'complete',
   'complete me',
+  'tomorrow add',
 ) {
   my ($manager_method, @manager_action) = MustDoManager::Client::task_manager_action($undefined_command);
   is(

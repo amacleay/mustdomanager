@@ -16,14 +16,14 @@ Readonly::Hash my %action_dispatch => {
     my ($description, @rest) = @_;
 
     if (
-      !$description
-      || $description =~ /^\s*$/
+      $description
+      && $description =~ /[A-Z]+/i
     ) {
-      # no description, don't do it
-      return;
+      return 'add_task', { description => $description }, @rest;
     }
     else {
-      return 'add_task', { description => $description }, @rest;
+      # no description, don't do it
+      return 'help', 'Usage: add [description text]';
     }
   },
   complete => sub {
@@ -32,7 +32,7 @@ Readonly::Hash my %action_dispatch => {
       return 'complete_task', $maybe_ordinal, @rest;
     }
     else {
-      return;
+      return 'help', 'Usage: complete [integer]';
     }
   },
   remove => sub {
@@ -41,14 +41,18 @@ Readonly::Hash my %action_dispatch => {
       return 'remove_task', $maybe_ordinal, @rest;
     }
     else {
-      return;
+      return 'help', 'Usage: remove [integer]';
     }
   },
   list => sub {
     my (@rest) = @_;
     return 'task_list', @rest;
   },
-  default => sub {
+  date => sub {
+    my (@rest) = @_;
+    return 'date', @rest;
+  },
+  help => sub {
     return 'help';
   },
 };
@@ -87,11 +91,21 @@ Readonly::Hash my %response_dispatch => {
     my $header_line = "Task list:";
     return join "\n", $header_line, @task_lines;
   },
+  date => sub {
+    my $date = shift;
+    return "Date is set to $date";
+  },
   help => sub {
-    return <<EOH
-MustDoManager.
-Give me a command like 'add [description]', 'complete [number]', or 'list'
-EOH
+    my @help_lines = @_;
+
+    push @help_lines, "MustDoManager"
+      unless @help_lines;
+    return join("\n",
+      @help_lines,
+      sprintf("Give me a command line %s",
+        join ", ", sort keys %action_dispatch,
+      ),
+    );
   },
 };
 Readonly my $action_keyword_regex => join("|",
@@ -121,7 +135,7 @@ sub response_from_command {
 
   # 'help' is actually handled by the client
   if ($manager_method eq 'help') {
-    return;
+    return @manager_args;
   }
   else {
     my @response = $task_manager->$manager_method( @manager_args );
@@ -162,7 +176,7 @@ sub task_manager_action {
     return @method_and_args;
   }
   else {
-    return $action_dispatch{default}->();
+    return $action_dispatch{help}->();
   }
 }
 
