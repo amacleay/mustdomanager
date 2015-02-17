@@ -14,6 +14,8 @@ has config_file => (
   is => 'ro',
   default => sub {
     (my $package_string = __PACKAGE__) =~ s/::/_/g ;
+	return $ENV{MUSTDOMANAGER_CONFIGFILE} if $ENV{MUSTDOMANAGER_CONFIGFILE};
+
     return File::Spec->catfile(
       $ENV{HOME},
       lc(".$package_string.yml"),

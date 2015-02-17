@@ -14,10 +14,20 @@ none
 
 require_ok('MustDoManager::TaskManager');
 
+{
+	local $ENV{MUSTDOMANAGER_CONFIGFILE} = CONFIG_FILE;
+	is(
+		MustDoManager::TaskManager->new->config_file(),
+		CONFIG_FILE,
+		"Config file can be specified by environment variable",
+	);
+}
+
 my $manager = MustDoManager::TaskManager->new(
   config_file => CONFIG_FILE,
 );
 isa_ok($manager, 'MustDoManager::TaskManager');
+is($manager->config_file, CONFIG_FILE, "config_file is the expected value: @{[ CONFIG_FILE ]}");
 
 # Clear out any existing task list data:
 # this is just for test idempotency
