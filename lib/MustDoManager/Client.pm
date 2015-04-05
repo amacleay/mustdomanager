@@ -157,7 +157,6 @@ sub task_manager_action {
 
   my @method_and_args;
   if ($command =~ /^(.*?)($action_keyword_regex)\b(.*)\s*/g) {
-    $DB::single=1;
     my ($maybe_date, $command_keyword, $subcommand) = ($1, $2, $3);
     foreach ($maybe_date, $subcommand) {
       s/^\s*//;
