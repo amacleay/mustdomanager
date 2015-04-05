@@ -85,11 +85,12 @@ sub task_list {
 }
 
 sub complete_task {
-  my ($self, $ordinal, $maybe_date) = @_;
+  my ($self, $ordinal, $maybe_note, $maybe_date) = @_;
 
   foreach my $task (@{ $self->task_list($maybe_date) }) {
     if ($task->{ordinal} == $ordinal) {
       $task->{completed} = 1;
+      $task->{completion_note} = $maybe_note;
       return $ordinal;
     }
   }

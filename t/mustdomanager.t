@@ -98,6 +98,14 @@ is(scalar @{ $manager->task_list }, 3, "Has three items");
 is($manager->task_list->[-1]->{ordinal}, 3, 'Right ordinal');
 is($manager->task_list->[-1]->{description}, 'wash the dog', 'Right description');
 
+$manager->complete_task(3, 'Dog was washed thoroughly');
+ok($manager->task_list->[2]->{completed}, "Completing task marks it");
+is(
+  $manager->task_list->[2]->{completion_note},
+  "Dog was washed thoroughly",
+  "When a task is completed with a note, is saved",
+);
+
 ###############
 # Other dates
 $manager->date($manager->date + 1);
@@ -203,8 +211,8 @@ ok(
   "Test precondition: brand new task not yet completed",
 );
 
-dies_ok { $manager->complete_task(1, $bogus_date) } "complete dies with bogus date";
-$manager->complete_task(1, $different_date);
+dies_ok { $manager->complete_task(1, '', $bogus_date) } "complete dies with bogus date";
+$manager->complete_task(1, '', $different_date);
 ok(
   $manager->task_list( $different_date )->[0]->{completed},
   "Able to complete task for different date",

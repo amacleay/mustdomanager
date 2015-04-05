@@ -27,12 +27,14 @@ Readonly::Hash my %action_dispatch => {
     }
   },
   complete => sub {
-    my ($maybe_ordinal, @rest) = @_;
-    if (looks_like_number $maybe_ordinal) {
-      return 'complete_task', $maybe_ordinal, @rest;
+    my ($subcommand, @rest) = @_;
+    
+    if ($subcommand && $subcommand =~ /^(\d+)\s*(.*)$/) {
+      my ($ordinal, $note) = ($1, $2);
+      return 'complete_task', $ordinal, $note, @rest;
     }
     else {
-      return 'help', 'Usage: complete [integer]';
+      return 'help', 'Usage: complete [integer] [optional note]';
     }
   },
   remove => sub {
@@ -83,10 +85,11 @@ Readonly::Hash my %response_dispatch => {
   task_list => sub {
     my ($task_list) = @_;
     my @task_lines = map {
-      sprintf q{#%d: %s"%s"},
+      sprintf q{#%d: %s"%s"%s},
         $_->{ordinal},
         $_->{completed} ? "COMPLETE " : "",
         $_->{description},
+        $_->{completion_note} ? " ($_->{completion_note})" : "",
     } @$task_list;
     my $header_line = "Task list:";
     return join "\n", $header_line, @task_lines;
@@ -154,6 +157,7 @@ sub task_manager_action {
 
   my @method_and_args;
   if ($command =~ /^(.*?)($action_keyword_regex)\b(.*)\s*/g) {
+    $DB::single=1;
     my ($maybe_date, $command_keyword, $subcommand) = ($1, $2, $3);
     foreach ($maybe_date, $subcommand) {
       s/^\s*//;
