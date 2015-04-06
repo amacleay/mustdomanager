@@ -105,7 +105,7 @@ Readonly::Hash my %response_dispatch => {
       unless @help_lines;
     return join("\n",
       @help_lines,
-      sprintf("Give me a command line %s",
+      sprintf("Give me a command like %s",
         join ", ", sort keys %action_dispatch,
       ),
     );
