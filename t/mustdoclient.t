@@ -3,13 +3,15 @@ use warnings;
 
 use Test::More;
 use MustDoManager::TaskManager;
+use DateTime;
 
 require_ok('MustDoManager::Client');
+
+my $date = today_datetime();
 
 #####################################
 # task_manager_action
 
-my $date = MustDoManager::TaskManager::init_today();
 foreach (
   ['add hang the laundry',
     'add_task',
@@ -40,7 +42,7 @@ foreach (
   ],
   ['today date',
     'date',
-    $date,  # today's date
+    format_date($date),  # today's date
   ],
   ['remove 666',
     'remove_task',
@@ -54,23 +56,29 @@ foreach (
   ['tomorrow add walk the dog',
     'add_task',
     { description => 'walk the dog' },
-    $date + 1,
+    format_date(
+      $date->clone->add( days => 1 )
+    ),
   ],
   ['today complete 20',
     'complete_task',
     20,
     '',
-    $date,
+    format_date($date),
   ],
   ['1 week complete 17 we already figured it out',
     'complete_task',
     17,
     'we already figured it out',
-    $date + 7,
+    format_date(
+      $date->clone->add( days => 7 )
+    ),
   ],
   ['yesterday list',
     'task_list',
-    $date - 1,
+    format_date(
+      $date->clone->subtract( days => 1 )
+    ),
   ],
   ['January 20, 1944 remove 30',
     'remove_task',
@@ -112,3 +120,14 @@ foreach my $undefined_command (
 
 done_testing();
 
+sub today_datetime {
+  my $today_yyyymmdd = MustDoManager::TaskManager::init_today();
+  # Date format is YYYYMMDD: parse it out so we can safely manipulate
+  my ($year, $month, $day) = ( $today_yyyymmdd =~ /(\d{4})(\d{2})(\d{2})/ );
+  $date = DateTime->new( year => $year, month => $month, day => $day );
+}
+
+sub format_date {
+  my ($datetime_object) = @_;
+  return $datetime_object->date('');
+}
