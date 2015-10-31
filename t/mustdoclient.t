@@ -124,7 +124,7 @@ sub today_datetime {
   my $today_yyyymmdd = MustDoManager::TaskManager::init_today();
   # Date format is YYYYMMDD: parse it out so we can safely manipulate
   my ($year, $month, $day) = ( $today_yyyymmdd =~ /(\d{4})(\d{2})(\d{2})/ );
-  $date = DateTime->new( year => $year, month => $month, day => $day );
+  return DateTime->new( year => $year, month => $month, day => $day );
 }
 
 sub format_date {
